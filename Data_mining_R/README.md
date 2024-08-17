@@ -1,6 +1,6 @@
 # 🏆 Projet de Data Mining R - GOUPE I
 
-## 📊 Dataset: *Nom_du_votre_dataset*
+## 📊 Dataset: *Customer-Churn-Records.csv*
 
 ### Domaine du Projet
 **Domaine**: FINANCE
