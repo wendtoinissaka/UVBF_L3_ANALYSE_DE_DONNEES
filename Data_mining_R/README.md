@@ -1,12 +1,12 @@
-# 🏆 Projet de Data Mining R - GOUPE I
+# 🏆 Projet de Data Mining R - GROUPE I
 
-## 📊 Dataset: *Customer-Churn-Records.csv*
+## 📊 Dataset: *[Customer-Churn-Records.csv](data/Customer-Churn-Records.csv)*
 
 ### Domaine du Projet
 **Domaine**: FINANCE
 
 ### 🧠 Problématique
-## 📊 Défi à relever: *Prévision du taux de désabonnement des clients bancaires dans R.*
+## 📊 Défi à relever: *Prévision de désabonnement des clients bancaires dans R.*
 
 > 
 <!-- >> *Exemple*: Comment prévoir les ventes en fonction des tendances historiques des données ? -->
