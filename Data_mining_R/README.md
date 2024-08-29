@@ -6,7 +6,7 @@
 **Domaine**: FINANCE
 
 ### 🧠 Problématique
-## 📊 Défi à relever: *Prévision de désabonnement des clients bancaires dans R.*
+## 📊 Défi à relever: *Prévision de désabonnement des clients bancaires.*
 
 > 
 <!-- >> *Exemple*: Comment prévoir les ventes en fonction des tendances historiques des données ? -->
