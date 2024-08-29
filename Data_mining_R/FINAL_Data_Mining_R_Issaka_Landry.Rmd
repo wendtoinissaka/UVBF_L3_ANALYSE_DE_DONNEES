@@ -7,7 +7,7 @@ output: html_notebook
 
 
 # **PREDIRE LE DESABONNEMENT DES CLIENTS BANCAIRES**
-![](Churn-Prediction-scaled.jpg)
+![](img/Churn-Prediction-scaled.jpg)
 
 # -----------------------------------------------------------------------------------------
 ## **INTRDOCUTION**
