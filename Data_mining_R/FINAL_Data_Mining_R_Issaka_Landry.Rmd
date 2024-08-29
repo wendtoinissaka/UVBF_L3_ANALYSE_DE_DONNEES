@@ -185,14 +185,14 @@ df$Gender <- as.factor(df$Gender)
 
 # Transforme 'Tenure' en facteur avec des labels pour chaque niveau.
 df$Tenure <- factor(df$Tenure, 
-                    levels = 1:10, 
-                    labels = c("1 an", "2 ans", "3 ans", "4 ans", "5 ans", "6 ans", 
+                    levels = 0:10, 
+                    labels = c("-1 an","1 an", "2 ans", "3 ans", "4 ans", "5 ans", "6 ans", 
                                "7 ans", "8 ans", "9 ans", "10 ans"))
 
 # Transforme 'HasCrCard' en facteur avec des labels pour chaque niveau.
 df$HasCrCard <- factor(df$HasCrCard, 
                        levels = c(0, 1), 
-                       labels = c("Pas de carte de crédit", "Carte de crédit"))
+                       labels = c("Pas de carte", "Carte de crédit"))
 
 # Transforme 'IsActiveMember' en facteur avec des labels pour chaque niveau.
 df$IsActiveMember <- factor(df$IsActiveMember, 
@@ -352,13 +352,15 @@ s2 <- ggplot(data = df, aes(x=Age)) +
 s3 <- ggplot(data = df, aes(x=Balance)) +
     geom_histogram(color="white", fill="green") +  # Histogramme avec barres vertes et bordures blanches.
     theme_bw() +  # Applique un thème avec un arrière-plan blanc.
-    theme(legend.position = "none")  # Masque la légende du graphique.
+    theme(legend.position = "none", 
+          axis.text.x = element_text(angle = 90, hjust = 1))  # Masque la légende du graphique.
 
 # Crée un histogramme pour la variable 'EstimatedSalary' avec des barres rouges et des bordures blanches.
 s4 <- ggplot(data = df, aes(x=EstimatedSalary)) +
     geom_histogram(color="white", fill="red") +  # Histogramme avec barres rouges et bordures blanches.
     theme_bw() +  # Applique un thème avec un arrière-plan blanc.
-    theme(legend.position = "none")  # Masque la légende du graphique.
+    theme(legend.position = "none",
+          axis.text.x = element_text(angle = 90, hjust = 1))  # Masque la légende du graphique.
 
 # Crée un histogramme pour la variable 'Point.Earned' avec des barres rouges et des bordures jaunes.
 s5 <- ggplot(data = df, aes(x=Point.Earned)) +
@@ -467,7 +469,8 @@ p3 <- ggbarplot(HasCrCard,  # Utilise le dataframe 'HasCrCard' comme source de d
                 lab.col = "black",  # Définit la couleur des étiquettes.
                 sort.val = "desc",  # Trie les barres par ordre décroissant des valeurs.
                 sort.by.groups = FALSE) +  # Ne trie pas les barres par groupe.
-      theme(legend.position = "none")  # Masque la légende du graphique.
+      theme(legend.position = "none",
+            axis.text.x = element_text(angle = 90, hjust = 1))  # Masque la légende du graphique.
 
 # Regroupe les données par la variable 'IsActiveMember' et calcule le nombre d'occurrences pour chaque groupe.
 IsActiveMember <- df %>%
@@ -492,7 +495,7 @@ p4 <- ggbarplot(IsActiveMember,  # Utilise le dataframe 'IsActiveMember' comme s
 # Regroupe les données par la variable 'Tenure' et calcule le nombre d'occurrences pour chaque groupe.
 Tenure <- df %>%
   group_by(Tenure) %>%  # Regroupe les données selon 'Tenure'.
-  summarise(Count = n())  # Calcule le nombre d'occurrences dans chaque groupe et les stocke dans 'Count'.
+  summarise(Count = n(), .groups = "drop")  # Calcule le nombre d'occurrences dans chaque groupe et les stocke dans 'Count'.
 
 # Crée un graphique à barres pour la variable 'Tenure'.
 p5 <- ggbarplot(Tenure,  # Utilise le dataframe 'Tenure' comme source de données.
@@ -507,7 +510,8 @@ p5 <- ggbarplot(Tenure,  # Utilise le dataframe 'Tenure' comme source de donnée
                 lab.col = "black",  # Définit la couleur des étiquettes.
                 sort.val = "desc",  # Trie les barres par ordre décroissant des valeurs.
                 sort.by.groups = FALSE) +  # Ne trie pas les barres par groupe.
-      theme(legend.position = "none")  # Masque la légende du graphique.
+      theme(legend.position = "none",  # Masque la légende du graphique.
+            axis.text.x = element_text(angle = 90, hjust = 1))  # Fait pivoter les labels de l'axe x à 90 degrés pour éviter le chevauchement.
 
 # Regroupe les données par la variable 'Complain' et calcule le nombre d'occurrences pour chaque groupe.
 Complain <- df %>%
@@ -547,10 +551,16 @@ p7 <- ggbarplot(Card.Type,  # Utilise le dataframe 'Card.Type' comme source de d
                 lab.col = "black",  # Définit la couleur des étiquettes.
                 sort.val = "desc",  # Trie les barres par ordre décroissant des valeurs.
                 sort.by.groups = FALSE) +  # Ne trie pas les barres par groupe.
-      theme(legend.position = "none")  # Masque la légende du graphique.
+      theme(legend.position = "none",
+            axis.text.x = element_text(angle = 90, hjust = 1))  # Masque la légende du graphique.
 
 
 
+```
+
+```{r}
+unique(data$Tenure)
+unique(df$Tenure)
 ```
 
 ```{r}
@@ -701,7 +711,8 @@ c3 <- ggbarplot(HCrCard, x = "HasCrCard", y = "pourcentage",  # Définit 'HasCrC
                 lab.pos = "in",  # Positionne les étiquettes à l'intérieur des barres
                 lab.size = 2.5,  # Définit la taille des étiquettes
                 lab.col = "white") +  # Définit la couleur des étiquettes
-  theme(legend.position = "none")  # Supprime la légende du graphique
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 90, hjust = 1))  # Supprime la légende du graphique
 
 # Calcul des pourcentages pour IsActiveMember
 IsActMember <- df %>%
@@ -735,7 +746,8 @@ c5 <- ggbarplot(Ten, x = "Tenure", y = "pourcentage",  # Définit 'Tenure' comme
                 lab.pos = "in",  # Positionne les étiquettes à l'intérieur des barres
                 lab.size = 2.5,  # Définit la taille des étiquettes
                 lab.col = "white") +  # Définit la couleur des étiquettes
-  theme(legend.position = "none")  # Supprime la légende du graphique
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 90, hjust = 1))  # Supprime la légende du graphique
 
 # Calcul des pourcentages pour Complain
 Complain <- df %>%
@@ -769,7 +781,8 @@ c7 <- ggbarplot(Card.Type, x = "Card.Type", y = "pourcentage",  # Définit 'Card
                 lab.pos = "in",  # Positionne les étiquettes à l'intérieur des barres
                 lab.size = 2.5,  # Définit la taille des étiquettes
                 lab.col = "white") +  # Définit la couleur des étiquettes
-  theme(legend.position = "none")  # Supprime la légende du graphique
+  theme(legend.position = "none",
+        axis.text.x = element_text(angle = 90, hjust = 1))  # Supprime la légende du graphique
 
 
 
@@ -1010,7 +1023,8 @@ print(summary(LogModel))    # Résumé du modèle affichant les détails sur les
 
 ```
 **Variables Significatives**
-  *ComplainPlainte : Cette variable a le coefficient le plus élevé (17.28) et est hautement significative (p < 0.001). Cela indique que les clients ayant déposé une plainte sont beaucoup plus susceptibles de quitter la banque.*
+
+  *ComplainPlainte : Cette variable a le coefficient le plus élevé (13.59) et est hautement significative (p < 0.001). Cela indique que les clients ayant déposé une plainte sont beaucoup plus susceptibles de quitter la banque.*
   *Age : Le coefficient (0.111) est également significatif (p = 0.0298), ce qui suggère que l'âge est positivement associé à la probabilité de quitter la banque.*
   *IsActiveMemberActif : Avec un coefficient de -2.477 et une p-value de 0.0359, cette variable montre que les membres actifs sont moins susceptibles de quitter la banque.*
 
@@ -1099,7 +1113,7 @@ table(testing$Exited, fitted.results > 0.5)    # Crée une table croisée pour m
 
 *Ce projet a visé à prédire l'attrition des clients bancaires en utilisant un modèle de régression logistique. Voici les principaux résultats :*
 
-  *Variables Clés : L'âge, les plaintes, et le statut d'activité sont les variables les plus influentes pour prédire l'attrition des clients.*
+  *Variables Clés : L'âge, les plaintes, la géographie sont les variables les plus influentes pour prédire l'attrition des clients.*
   *Performance du Modèle : Le modèle a atteint une exactitude de 99.8% avec une très faible erreur de classification, indiquant une excellente capacité à identifier les clients à risque de départ.*
   *Insights : Les résultats fournissent des informations précieuses pour cibler les efforts de rétention.*
 
