@@ -1094,11 +1094,10 @@ table(testing$Exited, fitted.results > 0.5)    # Crée une table croisée pour m
 
   *Le fait qu'un client ait ou non déposé une plainte était le facteur le plus important dans le taux de désabonnement.*
   
-  *Les autres facteurs liés au taux de désabonnement comprenaient l'âge du client et le nombre de points qu'il avait gagnés.*
+  *Les autres facteurs liés au taux de désabonnement comprenaient l'âge du client, la géographie,  et selon qu'il soit actif ou pas.*
 
   *Il est intéressant de noter qu'il ne semble pas y avoir de lien entre le taux de satisfaction du client ou la durée de l'engagement et le taux de désabonnement.*
   
-  *Si un client dépose une plainte, a plus de 36 ans et a gagné peu de points, il est plus susceptible de se désabonner. En revanche, les clients qui n'ont jamais déposé de plainte sont beaucoup moins susceptibles de se désabonner.*
 
 **Mesures pratiques**
 
@@ -1130,5 +1129,6 @@ table(testing$Exited, fitted.results > 0.5)    # Crée une table croisée pour m
 # Références
 - [Source 1](https://github.com/Pendopr/Telecom_Churn_Classification/tree/main)
 - [Source 2](https://jeffreyohene.github.io/projects/data/customer_churn.html)
+- [Source 3](https://openclassrooms.com/fr/courses/8248096-initiez-vous-a-r-pour-lanalyse-de-donnees)
 
 
