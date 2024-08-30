@@ -75,6 +75,14 @@ Ce projet vise à utiliser des techniques de classification pour prédire le dé
 # # 'FactoMineR' : Pour l'analyse multivariée, comme l'ACP.
 # install.packages("FactoMineR")
 
+packages <- c("FactoMineR","ggplot2","ggpubr","cowplot","dplyr","httr", "corrplot", "caret")
+
+for (package in packages) {
+  if (!requireNamespace(package, quietly = TRUE)) {
+    install.packages(package)
+  }
+  library(package, character.only = TRUE)
+}
 
 ```
 
@@ -84,33 +92,33 @@ Ce projet vise à utiliser des techniques de classification pour prédire le dé
 
 ###   Chargement des packages necessaires
 ```{r}
-# 'plyr' : Manipulation des données et opérations sur des data frames.
-library(plyr)
-# 'corrplot' : Visualisation des corrélations entre variables.
-library(corrplot)
-# 'ggplot2' : Création de graphiques et visualisations de données.
-library(ggplot2)
-# 'gridExtra' : Organisation et mise en page de plusieurs graphiques.
-library(gridExtra)
-# 'ggthemes' : Thèmes et palettes pour ggplot2.
-library(ggthemes)
-# 'caret' : Entraînement et évaluation de modèles de machine learning.
-library(caret)
-# 'party' : Création d'arbres de décision et forêts aléatoires.
-library(party)
-# 'httr' : Interface pour interagir avec les services web via HTTP.
-library(httr)
-# 'cowplot' : Combiner plusieurs graphiques ggplot2 en un seul.
-library(cowplot)
-# 'dplyr' : Manipulation et transformation des données.
-library(dplyr)
-# 'ggpubr' : Graphiques ggplot2 plus présentables.
-library(ggpubr)
-# 'FactoMineR' : Analyse multivariée, comme l'ACP.
-library(FactoMineR)
-
-# 'factoextra' : Visualisation des résultats d'analyse multivariée.
-library(factoextra)
+# # 'plyr' : Manipulation des données et opérations sur des data frames.
+# library(plyr)
+# # 'corrplot' : Visualisation des corrélations entre variables.
+# library(corrplot)
+# # 'ggplot2' : Création de graphiques et visualisations de données.
+# library(ggplot2)
+# # 'gridExtra' : Organisation et mise en page de plusieurs graphiques.
+# library(gridExtra)
+# # 'ggthemes' : Thèmes et palettes pour ggplot2.
+# library(ggthemes)
+# # 'caret' : Entraînement et évaluation de modèles de machine learning.
+# library(caret)
+# # 'party' : Création d'arbres de décision et forêts aléatoires.
+# library(party)
+# # 'httr' : Interface pour interagir avec les services web via HTTP.
+# library(httr)
+# # 'cowplot' : Combiner plusieurs graphiques ggplot2 en un seul.
+# library(cowplot)
+# # 'dplyr' : Manipulation et transformation des données.
+# library(dplyr)
+# # 'ggpubr' : Graphiques ggplot2 plus présentables.
+# library(ggpubr)
+# # 'FactoMineR' : Analyse multivariée, comme l'ACP.
+# library(FactoMineR)
+# 
+# # 'factoextra' : Visualisation des résultats d'analyse multivariée.
+# library(factoextra)
 
 ```
 
@@ -161,7 +169,7 @@ result
 
 Affiche un résumé statistique des colonnes du data frame 'df'
 ```{r}
-.
+
 summary(df)
 
 ```
@@ -184,10 +192,22 @@ df$Geography <- as.factor(df$Geography)
 df$Gender <- as.factor(df$Gender)
 
 # Transforme 'Tenure' en facteur avec des labels pour chaque niveau.
-df$Tenure <- factor(df$Tenure, 
-                    levels = 0:10, 
-                    labels = c("-1 an","1 an", "2 ans", "3 ans", "4 ans", "5 ans", "6 ans", 
-                               "7 ans", "8 ans", "9 ans", "10 ans"))
+group_tenure <- function(Tenure)
+{
+    if (Tenure >= 0 & Tenure <= 1){
+        return('0-1 an')
+    }else if(Tenure >= 2 & Tenure <= 3){
+        return('2-3 ans')
+    }else if (Tenure >= 4 & Tenure <= 5){
+        return('4-5 ans')
+    }else if (Tenure > 5 ){
+        return('> 5 ans')
+ }
+}
+
+df$Tenure <- sapply(df$Tenure,group_tenure)
+df$Tenure <- as.factor(df$Tenure)
+
 
 # Transforme 'HasCrCard' en facteur avec des labels pour chaque niveau.
 df$HasCrCard <- factor(df$HasCrCard, 
@@ -302,35 +322,51 @@ Mettre en pourcentage la variable cible
 
 Representation graphique
 ```{r}
+library(ggplot2)
 
-# Crée un graphique avec ggplot2 en utilisant 'df' comme source de données.
-  ggplot(data = df, aes(x = Exited, # 'Exited'  pour l'axe x.
-                        y = prop.table(stat(count)), #calcule les proportions pour l'axe y.
-                        fill = Exited,  # colore les barres en fonction de 'Exited'
-                        #ajoute des labels formatés en pourcentages.
-                        label = scales::percent_format(accuracy=0.01)(prop.table(stat(count))))) + 
+# Crée un graphique en camembert (pie chart) avec ggplot2
+ggplot(data = df, aes(x = "", # On met "" pour l'axe x car on veut un seul cercle
+                      y = prop.table(stat(count)), # Les proportions pour l'axe y
+                      fill = Exited,  # Colore les parts du camembert en fonction de 'Exited'
+                      label = scales::percent_format(accuracy=0.01)(prop.table(stat(count))))) + 
   
-  # Crée des barres  côte à côte 
-  geom_bar(position = "dodge") + 
-  geom_text(stat = 'count', # utilise les comptages pour les étiquettes.
-            position = position_dodge(0.5), # ajuste la position des étiquettes pour éviter le chevauchement.
-            vjust = 0.5,   #place les étiquettes légèrement au-dessus des barres.
-            size = 3.5) + # définit la taille des étiquettes.
- coord_flip()+   # Inverse les axes pour rendre les barres horizontales.
+  # Crée des barres pour former le camembert
+  geom_bar(width = 1, stat = "count") + 
   
-  scale_y_continuous(labels = scales::percent_format(accuracy=0.01))+   # Formate l'axe y pour afficher les valeurs en pourcentages avec une précision de 0.01%.
+  # Transformation en camembert
+  coord_polar(theta = "y") +
+  
+  # Ajoute les étiquettes sur le camembert
+  geom_text(stat = 'count', 
+            position = position_stack(vjust = 0.5), # Place les étiquettes au centre des parts
+            size = 3.5) + # Taille des étiquettes
+  
+  # Formate l'axe y pour afficher les valeurs en pourcentage
+  scale_y_continuous(labels = scales::percent_format(accuracy=0.01)) +
 
-  labs(
-    x ='Abandon',y ="Pourcentage d' Abandon")+    # Définit les labels des axes x et y.
-
-  ggtitle('TAUX DE CHUTE')   # Ajoute un titre au graphique.
+  # Labels des axes (même s'ils ne sont pas affichés dans un camembert)
+  labs(x ='', y ="Pourcentage d'Abandon") +    
+  
+  # Titre du graphique
+  ggtitle('TAUX DE CHUTE') + 
+  
+  # Enlève les lignes et les fonds pour un look plus propre
+  theme_void()  # Supprime les axes et le fond, ce qui est courant pour les camemberts
 
 
 ```
   *Le nombre de clients qui restent dans la banque est nettement plus élevé que ceux qui la quittent.*
 
 
+```{r}
 
+
+
+```
+
+```{r}
+str(df)
+```
 
 
 *Analyse des variables continues*
@@ -411,86 +447,73 @@ s7 <- ggplot(data = df, aes(x=Satisfaction.Score)) +
 
 ####   Analyse des variables categorielles
 ```{r}
+
+
 # Regroupe les données par la variable 'Geography' et calcule le nombre d'occurrences pour chaque groupe.
 Geography <- df %>%
   group_by(Geography) %>%  # Regroupe les données selon 'Geography'.
   summarise(Count = n())  # Calcule le nombre d'occurrences dans chaque groupe et les stocke dans 'Count'.
 
-# Crée un graphique à barres pour la variable 'Geography'.
-p1 <- ggbarplot(Geography,  # Utilise le dataframe 'Geography' comme source de données.
-                x = "Geography",  # Définit 'Geography' comme variable sur l'axe des x.
-                y = "Count",  # Définit 'Count' comme variable sur l'axe des y.
-                fill = "Geography",  # Remplit les barres avec des couleurs basées sur 'Geography'.
-                color = "Geography",  # Bordure des barres en fonction de 'Geography'.
-                palette = "jco",  # Utilise la palette de couleurs "jco".
-                label = TRUE,  # Affiche les étiquettes sur les barres.
-                lab.size = 2.5,  # Définit la taille des étiquettes.
-                lab.pos = "out",  # Place les étiquettes à l'extérieur des barres.
-                lab.col = "black",  # Définit la couleur des étiquettes.
-                sort.val = "desc",  # Trie les barres par ordre décroissant des valeurs.
-                sort.by.groups = FALSE) +  # Ne trie pas les barres par groupe.
-      theme(legend.position = "none")  # Masque la légende du graphique.
+# Création du diagramme circulaire
+p1 <- ggplot(Geography, aes(x = "", y = Count, fill = Geography)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start = 0) +
+  labs(title = "Répartition par géographie") +
+  theme_void() +
+  theme(legend.position = "left") +
+  geom_text(aes(label = paste0(round(Count/sum(Count)*100), "%")),
+            position = position_stack(vjust = 0.5), size = 3)
 
-# Regroupe les données par la variable 'Gender' et calcule le nombre d'occurrences pour chaque groupe.
+
+
+
+# Regroupe les données par genre et compte les occurrences
 Gender <- df %>%
-  group_by(Gender) %>%  # Regroupe les données selon 'Gender'.
-  summarise(Count = n())  # Calcule le nombre d'occurrences dans chaque groupe et les stocke dans 'Count'.
+  group_by(Gender) %>%
+  summarise(Count = n())
 
-# Crée un graphique à barres pour la variable 'Gender'.
-p2 <- ggbarplot(Gender,  # Utilise le dataframe 'Gender' comme source de données.
-                x = "Gender",  # Définit 'Gender' comme variable sur l'axe des x.
-                y = "Count",  # Définit 'Count' comme variable sur l'axe des y.
-                fill = "Gender",  # Remplit les barres avec des couleurs basées sur 'Gender'.
-                color = "Gender",  # Bordure des barres en fonction de 'Gender'.
-                palette = "jco",  # Utilise la palette de couleurs "jco".
-                label = TRUE,  # Affiche les étiquettes sur les barres.
-                lab.size = 2.5,  # Définit la taille des étiquettes.
-                lab.pos = "out",  # Place les étiquettes à l'extérieur des barres.
-                lab.col = "black",  # Définit la couleur des étiquettes.
-                sort.val = "desc",  # Trie les barres par ordre décroissant des valeurs.
-                sort.by.groups = FALSE) +  # Ne trie pas les barres par groupe.
-      theme(legend.position = "none")  # Masque la légende du graphique.
+# Crée le diagramme circulaire
+p2 <- ggplot(Gender, aes(x = "", y = Count, fill = Gender)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start = 0) +
+  labs(title = "Répartition par genre") +
+  theme_void() +
+  theme(legend.position = "left") +
+  geom_text(aes(label = paste0(round(Count/sum(Count)*100), "%")),
+            position = position_stack(vjust = 0.5), size = 3)
 
-# Regroupe les données par la variable 'HasCrCard' et calcule le nombre d'occurrences pour chaque groupe.
+
+
+# Regroupement des données par possession de carte de crédit et compte les occurrences
 HasCrCard <- df %>%
-  group_by(HasCrCard) %>%  # Regroupe les données selon 'HasCrCard'.
-  summarise(Count = n())  # Calcule le nombre d'occurrences dans chaque groupe et les stocke dans 'Count'.
+  group_by(HasCrCard) %>%
+  summarise(Count = n())
 
-# Crée un graphique à barres pour la variable 'HasCrCard'.
-p3 <- ggbarplot(HasCrCard,  # Utilise le dataframe 'HasCrCard' comme source de données.
-                x = "HasCrCard",  # Définit 'HasCrCard' comme variable sur l'axe des x.
-                y = "Count",  # Définit 'Count' comme variable sur l'axe des y.
-                fill = "HasCrCard",  # Remplit les barres avec des couleurs basées sur 'HasCrCard'.
-                color = "HasCrCard",  # Bordure des barres en fonction de 'HasCrCard'.
-                palette = "jco",  # Utilise la palette de couleurs "jco".
-                label = TRUE,  # Affiche les étiquettes sur les barres.
-                lab.size = 2.5,  # Définit la taille des étiquettes.
-                lab.pos = "out",  # Place les étiquettes à l'extérieur des barres.
-                lab.col = "black",  # Définit la couleur des étiquettes.
-                sort.val = "desc",  # Trie les barres par ordre décroissant des valeurs.
-                sort.by.groups = FALSE) +  # Ne trie pas les barres par groupe.
-      theme(legend.position = "none",
-            axis.text.x = element_text(angle = 90, hjust = 1))  # Masque la légende du graphique.
+# Crée le diagramme circulaire pour la possession de carte de crédit
+p3 <- ggplot(HasCrCard, aes(x = "", y = Count, fill = HasCrCard)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start = 0) +
+  labs(title = "Répartition des clients \n ayant une carte de crédit") +
+  theme_void() +
+  theme(legend.position = "left") +
+  geom_text(aes(label = paste0(round(Count/sum(Count)*100), "%")),
+            position = position_stack(vjust = 0.5), size = 3)
 
-# Regroupe les données par la variable 'IsActiveMember' et calcule le nombre d'occurrences pour chaque groupe.
+
+# Regroupement des données par 'IsActiveMember' et calcul des effectifs
 IsActiveMember <- df %>%
-  group_by(IsActiveMember) %>%  # Regroupe les données selon 'IsActiveMember'.
-  summarise(Count = n())  # Calcule le nombre d'occurrences dans chaque groupe et les stocke dans 'Count'.
+  group_by(IsActiveMember) %>%
+  summarise(Count = n())
 
-# Crée un graphique à barres pour la variable 'IsActiveMember'.
-p4 <- ggbarplot(IsActiveMember,  # Utilise le dataframe 'IsActiveMember' comme source de données.
-                x = "IsActiveMember",  # Définit 'IsActiveMember' comme variable sur l'axe des x.
-                y = "Count",  # Définit 'Count' comme variable sur l'axe des y.
-                fill = "IsActiveMember",  # Remplit les barres avec des couleurs basées sur 'IsActiveMember'.
-                color = "IsActiveMember",  # Bordure des barres en fonction de 'IsActiveMember'.
-                palette = "jco",  # Utilise la palette de couleurs "jco".
-                label = TRUE,  # Affiche les étiquettes sur les barres.
-                lab.size = 2.5,  # Définit la taille des étiquettes.
-                lab.pos = "out",  # Place les étiquettes à l'extérieur des barres.
-                lab.col = "black",  # Définit la couleur des étiquettes.
-                sort.val = "desc",  # Trie les barres par ordre décroissant des valeurs.
-                sort.by.groups = FALSE) +  # Ne trie pas les barres par groupe.
-      theme(legend.position = "none")  # Masque la légende du graphique.
+# Diagramme circulaire pour 'IsActiveMember'
+p4 <- ggplot(IsActiveMember, aes(x = "", y = Count, fill = IsActiveMember)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start = 0) +
+  labs(title = "Répartition des clients actifs") +
+  theme_void() +
+  theme(legend.position = "left") +
+  geom_text(aes(label = paste0(round(Count/sum(Count)*100), "%")),
+            position = position_stack(vjust = 0.5), size = 3)
 
 # Regroupe les données par la variable 'Tenure' et calcule le nombre d'occurrences pour chaque groupe.
 Tenure <- df %>%
@@ -513,25 +536,21 @@ p5 <- ggbarplot(Tenure,  # Utilise le dataframe 'Tenure' comme source de donnée
       theme(legend.position = "none",  # Masque la légende du graphique.
             axis.text.x = element_text(angle = 90, hjust = 1))  # Fait pivoter les labels de l'axe x à 90 degrés pour éviter le chevauchement.
 
-# Regroupe les données par la variable 'Complain' et calcule le nombre d'occurrences pour chaque groupe.
-Complain <- df %>%
-  group_by(Complain) %>%  # Regroupe les données selon 'Complain'.
-  summarise(Count = n())  # Calcule le nombre d'occurrences dans chaque groupe et les stocke dans 'Count'.
 
-# Crée un graphique à barres pour la variable 'Complain'.
-p6 <- ggbarplot(Complain,  # Utilise le dataframe 'Complain' comme source de données.
-                x = "Complain",  # Définit 'Complain' comme variable sur l'axe des x.
-                y = "Count",  # Définit 'Count' comme variable sur l'axe des y.
-                fill = "Complain",  # Remplit les barres avec des couleurs basées sur 'Complain'.
-                color = "Complain",  # Bordure des barres en fonction de 'Complain'.
-                palette = "jco",  # Utilise la palette de couleurs "jco".
-                label = TRUE,  # Affiche les étiquettes sur les barres.
-                lab.size = 2.5,  # Définit la taille des étiquettes.
-                lab.pos = "out",  # Place les étiquettes à l'extérieur des barres.
-                lab.col = "black",  # Définit la couleur des étiquettes.
-                sort.val = "desc",  # Trie les barres par ordre décroissant des valeurs.
-                sort.by.groups = FALSE) +  # Ne trie pas les barres par groupe.
-      theme(legend.position = "none")  # Masque la légende du graphique.
+# Regroupe les données par 'Complain' et calcule les effectifs
+Complain <- df %>%
+  group_by(Complain) %>%
+  summarise(Count = n())
+
+# Diagramme circulaire pour 'Complain'
+p6 <- ggplot(Complain, aes(x = "", y = Count, fill = Complain)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start = 0) +
+  labs(title = "Répartition des plaintes") +
+  theme_void() +
+  theme(legend.position = "left") +
+  geom_text(aes(label = paste0(round(Count/sum(Count)*100), "%")),
+            position = position_stack(vjust = 0.5), size = 3)
 
 # Regroupe les données par la variable 'Card.Type' et calcule le nombre d'occurrences pour chaque groupe.
 Card.Type <- df %>%
@@ -559,13 +578,12 @@ p7 <- ggbarplot(Card.Type,  # Utilise le dataframe 'Card.Type' comme source de d
 ```
 
 ```{r}
-unique(data$Tenure)
-unique(df$Tenure)
+
 ```
 
 ```{r}
 # Utilise la fonction ggarrange pour organiser plusieurs graphiques en un seul tableau.
-ggarrange(p1, p2, p3, p4, p5, p6, p7,  # Liste des graphiques à agencer (p1, p2, p3, p4, p5, p6, p7).
+ggarrange(p1, p2, p3, p4, p5, p7, p6,  # Liste des graphiques à agencer (p1, p2, p3, p4, p5, p6, p7).
           labels = "AUTO",  # Ajoute automatiquement des labels (lettres) pour chaque graphique dans l'agencement.
           common.legend = FALSE,  # Ne partage pas de légende commune entre les graphiques.
           legend = NULL,  # Exclut toute légende de l'agencement 
@@ -574,16 +592,22 @@ ggarrange(p1, p2, p3, p4, p5, p6, p7,  # Liste des graphiques à agencer (p1, p2
 
 
 ```
-  *Les clients sont essentiellement originaires de 3 pays, la France, l'Allemagne et l'Espagne, la majorité vient de France comme le montre le graphique, suivi d'un nombre similaire de clients et à distance du premier d'Allemagne et d'Espagne.*
+  *Les clients sont essentiellement originaires de 3 pays, la France, l'Allemagne et l'Espagne dont 51% de Francais, 25% d'Allemands et 24% d'Espanols.*
   
-  *Il existe un nombre plus ou moins équilibré de clients hommes et femmes, de membres actifs et non actifs, ceux qui possèdent une carte étant largement plus nombreux que ceux qui n'en ont pas.*
+  *Les clients de cette banques sont composes de 55% d'hommes et 45% de femmes.*
   
-  *Parmi le nombre d'années pendant lesquelles un client reste dans la banque, les clients qui n'ont pas 1 an et ceux qui en ont 10 ans sont nettement inférieurs au nombre que les autres ont en fonction des années de permanence dans la banque.*
+  *70% des clients possedent une carte de credit contre 30% qui n'en possedent pas.*
   
-  *Les clients qui ne possedent pas de plainte sont majoritaires a ceux qui en ont.*
+  *52% des clients sont des clients actifs de la banque par rapport a 48% non actifs.*
   
-  *Il ya  environ un nombre equitable de clients qui possedent des types de cartes differentes*
-
+  *Les clients ayant une anciennete de plus de 5ans sont les plus majoritairs(2247) suivis de ceux ayant 2 ou 3 ans d'ancienntes(1040) puis ceux ayant 4 ou 5ans d'anciennete(989). Peu de clients ont une anciennete de moins d'un an*
+  
+  *Pour chaque type de carte, presqu'un quart des clients en possede. Comme illustre le graphique, 1256 clients sont detenteurs d'une carte en Or, 1254 possedent la carte en Argent, 1251 ont une carte en Platine et 1239 clients sont proprietaires d'une carte en Diamant*
+  
+  *seulement 20% des clients portent une plainte contre la banque par rapport a 80% d'entre eux ne se plaignent pas*
+  
+  
+ 
 
 
 
@@ -832,23 +856,6 @@ str(df)
 ## Partie IV : **Implémenter une Analyse Factorielle(ACP) **
 # -----------------------------------------------------------------------------------------
 
-## Choix des variables pour faire l'ACP
-```{r}
-  # Identifie les colonnes numériques dans le dataframe 'df' et crée un vecteur logique
-numeric.var <- sapply(df, is.numeric)
-# Calcule la matrice de corrélation pour les colonnes numériques sélectionnées
-corr.matrix <- cor(df[, numeric.var])
-# Crée un diagramme de corrélation pour visualiser les corrélations entre les variables numériques
-corrplot(corr.matrix,  # La matrice de corrélation à visualiser
-         main = "\n\nDiagramme de Corrélation pour les Variables Numériques",  # Titre du graphique
-         method = "number")  # Affiche les coefficients de corrélation sur le graphique
-```
-
-Le Nombre de Produits et le Solde sont corrélés, donc nous allons supprimer le Nombre de Produits
-```{r}
-df$NumOfProducts <- NULL
-
-```
 
 Selectionner les variables numeriques pour faire l'ACP
 ```{r}
@@ -884,7 +891,6 @@ res.pca = PCA(df_scaled,                # Applique l'ACP sur le dataframe 'df_sc
 
 
 
-
 Effectuer l'ACP en incluant Complain comme variable supplémentaire qualitative
 ```{r}
 # Fusionner les deux dataframes
@@ -900,42 +906,38 @@ plot.PCA(res.pca, axes=c(1, 2), choix="ind", habillage=3)
 ```
 *L'ACP réalisée montre comment les variables du jeu de données se comportent et se regroupent selon les deux premières dimensions principales :*
 
-  *Dim 1 (17.42% de la variance expliquée) :*
-    Cette dimension est principalement influencée par les variables Balance, Age, et EstimatedSalary. Ces variables sont fortement corrélées entre elles, indiquant qu'elles représentent une dimension commune du comportement des clients, probablement liée à des aspects financiers et démographiques.
+  *Interprétation du Graphe  des variables*
 
-  *Dim 2 (17.09% de la variance expliquée) :*
-    La deuxième dimension est dominée par la variable SatisfactionScore. Cette dimension semble capturer une autre facette du comportement des clients, potentiellement leur perception ou satisfaction, qui est distincte des aspects financiers.
-    
-  *Positionnement des variables :*
-    Balance, Age, et EstimatedSalary sont proches les unes des autres et corrélées positivement avec Dim 1, suggérant qu'un client avec un solde élevé tend également à avoir un âge et un salaire estimé élevés.
-    SatisfactionScore est corrélée négativement avec Dim 1 et positivement avec Dim 2, ce qui indique que la satisfaction des clients peut être inversement liée aux caractéristiques capturées par Dim 1.
-    CreditScore et Point.Earned sont modérément corrélés avec les deux dimensions, mais ne dominent aucune d'elles, ce qui suggère qu'ils capturent des variations distinctes et moins significatives dans ces deux premières dimensions.
+  Le graphique montre la projection des variables sur les deux premières dimensions de l'Analyse en Composantes Principales (ACP).
 
-**Conclusion**
-  L'ACP révèle que les variables liées à la finance et à l'âge (Balance, Age, EstimatedSalary) se regroupent sur une dimension commune, tandis que la satisfaction des clients (SatisfactionScore) se distingue sur une autre dimension.
+  *Dim 1 (18,7%) :*
+      Positivement corrélée avec Balance, indiquant que cette variable contribue de manière significative à cette dimension.
+        Négativement corrélée avec NumOfProducts, ce qui signifie que les clients avec un solde élevé tendent à avoir un nombre de produits faible, et inversement.
+
+  *Dim 2 (14,8%) :*
+      Négativement corrélée avec Satisfaction.Score, suggérant que les clients moins satisfaits ont tendance à être positionnés sur des valeurs négatives de Dim 2.
+      Age est également faiblement corrélée négativement avec Dim 2, indiquant une légère tendance pour les clients plus âgés à se situer sur des valeurs négatives de cette dimension.
+
+ *Variables modérément corrélées :*
+      CreditScore, EstimatedSalary, et Point.Earned montrent des contributions faibles à modérées sur les deux dimensions, avec des angles faibles entre CreditScore et Point.Earned, suggérant une corrélation positive entre elles. Cependant, ces variables ne dominent aucune des dimensions.
+
+  *Variables faiblement corrélées :*
+      La variable Age est très faiblement corrélée avec les deux axes, ce qui signifie qu’elle n’apporte presque aucune information sur ces deux premières dimensions de l'ACP.
+  
+  
   
   **-----------------------------------------------------**
+  
+  
   *Interprétation du Graphique  des Individus*
-
-  *Dimensions Principales :*
-      Dim 1 (17.42%) : Cette dimension explique 17.42% de la variance totale des données.
-      Dim 2 (17.09%) : Cette dimension capture 17.09% de la variance totale.
-
-  *Coloration par Variable (Balance) :*
-    Les individus sont colorés en fonction de leur Balance (solde) : les tons rouges indiquent un solde plus élevé, tandis que les tons bleus indiquent un solde plus faible.
-    La coloration montre que les individus ayant un solde plus élevé tendent à être situés vers la droite du graphique (correspondant à des valeurs plus élevées sur Dim 1).
-
-  *Répartition des Individus :*
-    Les individus sont relativement bien dispersés le long des deux premières dimensions, ce qui montre une bonne variabilité des données dans ces dimensions.
-    La distribution équilibrée autour de l'origine indique qu'aucune direction n'est particulièrement dominante pour l'ensemble des individus.
-
-  *Observation des Complaints :*
-    Les labels Complain.2 semblent apparaître au centre du graphique, ce qui peut indiquer que ces individus n'ont pas de caractéristiques extrêmes en termes de Balance ou d'autres variables influençant Dim 1 et Dim 2.
-
-**Conclusion**
-  Ce graphique d'ACP des individus révèle que la dimension 1 (Dim 1) est influencée par le solde (Balance) des clients, avec une tendance des clients ayant un solde plus élevé à se positionner sur la droite de ce graphique. La répartition équilibrée autour de l'origine suggère une bonne diversité des caractéristiques parmi les individus
   
-  
+  Le graphe des individus représente la projection des clients dans le plan formé par les deux premières dimensions de l'Analyse en Composantes Principales (ACP). Ces deux dimensions expliquent respectivement 18,70% et 14,89% de la variance totale des données, ce qui signifie qu'une part significative de l'information est capturée par ce graphique.
+
+  *Répartition des Clients :* Les individus (clients) sont dispersés de manière relativement homogène autour de l'origine, ce qui suggère une diversité dans les comportements des clients en termes de variables analysées.
+
+  *Couleur et Balance :* Les points colorés selon la variable Balance montrent que les clients avec un solde élevé (rouge) tendent à se concentrer sur la droite du graphe, tandis que ceux avec un solde faible (bleu) se trouvent plutôt sur la gauche. Cela indique que la dimension 1 est probablement influencée par la variable Balance.
+
+  *Variable Supplémentaire - Complain :* La variable Complain, qui est binaire (Oui/Non), est représentée au centre du graphique. Cela signifie que les individus ayant déposé une plainte (Complain = Oui) ou non (Complain = Non) ne montrent pas de séparation claire sur les deux premières dimensions principales. Autrement dit, le fait de déposer une plainte ne semble pas être fortement associé aux dimensions principales capturées par l'ACP.
 
 
 
@@ -963,7 +965,7 @@ plot.PCA(res.pca, axes=c(1, 2), choix="ind", habillage=3)
 
 
 ```{r}
-df$Tenure <- NULL
+# df$Tenure <- NULL
 
 
 ```
@@ -1023,7 +1025,6 @@ print(summary(LogModel))    # Résumé du modèle affichant les détails sur les
 
 ```
 **Variables Significatives**
-
   *ComplainPlainte : Cette variable a le coefficient le plus élevé (13.59) et est hautement significative (p < 0.001). Cela indique que les clients ayant déposé une plainte sont beaucoup plus susceptibles de quitter la banque.*
   *Age : Le coefficient (0.111) est également significatif (p = 0.0298), ce qui suggère que l'âge est positivement associé à la probabilité de quitter la banque.*
   *IsActiveMemberActif : Avec un coefficient de -2.477 et une p-value de 0.0359, cette variable montre que les membres actifs sont moins susceptibles de quitter la banque.*
@@ -1031,8 +1032,6 @@ print(summary(LogModel))    # Résumé du modèle affichant les détails sur les
 
 
 ```{r}
-
-
 # Convertit la variable 'Exited' dans l'ensemble de données de test en type caractère
 testing$Exited <- as.character(testing$Exited)   # Transforme 'Exited' en chaîne de caractères pour pouvoir modifier les valeurs
 
@@ -1047,7 +1046,15 @@ fitted.results <- predict(LogModel,                   # Utilise le modèle LogMo
                           newdata = testing,          # Prédictions sur les données de test
                           type = 'response')         # Type de prédiction : 'response' donne des probabilités
 
-head(fitted.results) # Verifier  les prédcitions en affichant les premieres lignes
+# Sélectionne aléatoirement 6 observations pour vérifier leurs probabilités prédites
+set.seed(2024)  # Assure la reproductibilité de l'échantillonnage aléatoire
+random_indices <- sample(1:nrow(testing), 6)  # Sélectionne 6 indices aléatoires
+selected_results <- fitted.results[random_indices]  # Récupère les probabilités pour ces indices
+selected_results  # Affiche les probabilités des 6 observations sélectionnées
+
+# Optionnel : Affiche également les valeurs réelles correspondantes pour comparaison
+selected_actual <- testing$Exited[random_indices]
+data.frame(Probabilities = selected_results, Actual = selected_actual)
 
 # Convertit les probabilités en classes binaires en utilisant un seuil de 0.5
 fitted.results <- ifelse(fitted.results > 0.5, 1, 0)  # Si la probabilité est > 0.5, prédiction = 1 (Quitté), sinon 0 (Resté)
@@ -1061,6 +1068,7 @@ print(paste('Logistic Regression Accuracy', 1 - misClasificError))   # Affiche l
 # Affiche la matrice de confusion pour évaluer les performances du modèle
 print("Confusion Matrix for Logistic Regression")   # Affiche un message pour indiquer que la matrice de confusion sera affichée
 table(testing$Exited, fitted.results > 0.5)    # Crée une table croisée pour montrer les résultats réels vs prédits
+
 ```
 
 *Prédictions :*
@@ -1113,7 +1121,7 @@ table(testing$Exited, fitted.results > 0.5)    # Crée une table croisée pour m
 
 *Ce projet a visé à prédire l'attrition des clients bancaires en utilisant un modèle de régression logistique. Voici les principaux résultats :*
 
-  *Variables Clés : L'âge, les plaintes, la géographie sont les variables les plus influentes pour prédire l'attrition des clients.*
+  *Variables Clés : L'âge, les plaintes, et le statut d'activité sont les variables les plus influentes pour prédire l'attrition des clients.*
   *Performance du Modèle : Le modèle a atteint une exactitude de 99.8% avec une très faible erreur de classification, indiquant une excellente capacité à identifier les clients à risque de départ.*
   *Insights : Les résultats fournissent des informations précieuses pour cibler les efforts de rétention.*
 
